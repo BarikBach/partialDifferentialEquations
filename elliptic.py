@@ -1,8 +1,11 @@
+u"""Решение эллептической задачи."""
+from __future__ import print_function  # Форматный вывод
 import numpy
 import math
 import pylab
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
+import matplotlib.pyplot as plt
 
 
 def ellips(x, y, X, Y):
@@ -25,6 +28,7 @@ def ellips(x, y, X, Y):
         return 10
 
     def analytical(x, y):
+        u"""Аналитическое рещение."""
         return x + y
     n = math.ceil(X/x) + 1
     m = math.ceil(Y/y) + 1
@@ -42,6 +46,11 @@ def ellips(x, y, X, Y):
 
 
 def libman(x, y, X, Y, eps):
+    u"""Решение эллептического уравнения.
+
+    Использован центрально-семмитричный шаблон и метод Либмана
+    Принимает на вход значения a, сеточные шаги и границы условия
+    """
     def interpolation(x1, x2, y1, y2, h):
         x = numpy.ones(math.ceil((x2 - x1) / h)+1)
         for i in range(len(x)):
@@ -52,7 +61,7 @@ def libman(x, y, X, Y, eps):
     m = len(ygird)
     for i in range(1, n-1):
         u[i] = interpolation(xgird[0], xgird[n-1], u[i][0], u[i][m-1], y)
-    for k in range(10):  # Максимальное количество итераций 1000
+    for k in range(100):  # Максимальное количество итераций 1000
         newU = u.copy()
         maxE = 0.0
         for i in range(1, n-1):
@@ -69,26 +78,36 @@ def libman(x, y, X, Y, eps):
         return
     for i in range(n):
         for j in range(m):
-            print("%-11.4f" % (u[i, j]), end =' ')
+            print("%-6.2f" % (u[i, j]), end=' ')
         print()
     print()
     print("Analytic")
     for i in range(n):
         for j in range(m):
-            print("%-11.4f" % (analytical[i, j]), end =' ')
+            print("%-6.2f" % (analytical[i, j]), end=' ')
         print()
     print()
     xgird, ygird = numpy.meshgrid(xgird, ygird)
     return u, analytical, xgird, ygird
 
 
-u, anT, x, y  = libman(0.1, 0.1, 1., 1., 0.00001)
+u, anT, x, y = libman(0.1, 0.1, 1., 1., 0.00001)
+deltaExplict = abs(anT - u)
+for i in range(len(x)):
+    for j in range(len(y)):
+        print("%-6.2f" % (deltaExplict[i, j]), end=' ')
+    print()
+print("Максимальная погрешность: ", "%-6.2f" % deltaExplict.max())
 fig = pylab.figure()
 axes = Axes3D(fig)
-axes.plot_surface(x, y, anT, rstride=1, cstride=1, cmap = cm.jet)
+plt.title(u"Центрально-симметричный шаблон.")
+axes.plot_surface(x, y, anT, rstride=1, cstride=1, cmap=cm.jet)
 pylab.show()
+fig.savefig("ellipsЦСШ.png")
 
 fig = pylab.figure()
 axes = Axes3D(fig)
-axes.plot_surface(x, y, anT, rstride=1, cstride=1, cmap = cm.jet)
+plt.title(u"Аналитическое решение.")
+axes.plot_surface(x, y, anT, rstride=1, cstride=1, cmap=cm.jet)
 pylab.show()
+fig.savefig("ellipsАналит.png")
